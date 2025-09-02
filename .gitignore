@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv
+venv/
+ENV/
+env/
+
+# IDEs
+.idea/
+.vscode/
+
+# Node.js
+node_modules/
+dist/
+.npm
+
+# Temporary files
+*.swp
+*.swo
+*.swn
+
+# Datasets
+/tmp/
+
+
