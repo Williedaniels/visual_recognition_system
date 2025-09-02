@@ -29,7 +29,7 @@ from models.face_recognition import FaceRecognizer, FaceDetector, AdvancedVisual
 from utils.image_processing import ImageProcessor
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app)  # Enable CORS for all routes, allowing requests from the frontend dev server
 
 # Global variables for models
 image_classifier = None
