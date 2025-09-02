@@ -7,7 +7,6 @@ including endpoints for image classification, object detection, and face recogni
 """
 
 from flask import Flask, request, jsonify, render_template, send_file
-from flask_cors import CORS
 import cv2
 import numpy as np
 import base64
@@ -15,9 +14,12 @@ import io
 import os
 import sys
 from PIL import Image
+import re
 import json
 from typing import Dict, List, Any
 import traceback
+from flask_cors import CORS
+import logging
 
 # Add src directory to path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
@@ -29,8 +31,35 @@ from models.face_recognition import FaceRecognizer, FaceDetector, AdvancedVisual
 from utils.image_processing import ImageProcessor
 
 app = Flask(__name__)
-# Enable CORS for all routes, which is suitable for development.
-CORS(app)
+CORS(app, origins=["http://localhost:5173"])  # Allow your frontend origin
+
+# Or if you want to allow all origins during development:
+# CORS(app)
+
+app.logger.setLevel(logging.DEBUG)
+
+@app.before_request
+def handle_preflight():
+    """
+    Manually handle CORS preflight (OPTIONS) requests. This is a more direct
+    approach to bypass potential issues with Flask-CORS and proxies.
+    """
+    if request.method == "OPTIONS":
+        res = app.make_response()
+        # Allow your frontend origin
+        res.headers['Access-Control-Allow-Origin'] = 'http://localhost:5173'
+        # Specify allowed methods
+        res.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+        # Specify allowed headers
+        res.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+        return res
+
+@app.after_request
+def add_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = 'http://localhost:5173'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    return response
 
 # Global variables for models
 image_classifier = None
@@ -55,7 +84,7 @@ def decode_base64_image(base64_string: str) -> np.ndarray:
         base64_string: Base64 encoded image
         
     Returns:
-        Image as numpy array
+        Image as numpy array in BGR format
     """
     # Remove data URL prefix if present
     if ',' in base64_string:
@@ -67,14 +96,17 @@ def decode_base64_image(base64_string: str) -> np.ndarray:
     # Convert to PIL Image
     pil_image = Image.open(io.BytesIO(image_data))
     
+    # Ensure image is in RGB format (handles RGBA, P, etc.)
+    if pil_image.mode != 'RGB':
+        pil_image = pil_image.convert('RGB')
+    
     # Convert to numpy array
     image_array = np.array(pil_image)
     
     # Convert RGB to BGR for OpenCV
-    if len(image_array.shape) == 3 and image_array.shape[2] == 3:
-        image_array = cv2.cvtColor(image_array, cv2.COLOR_RGB2BGR)
+    image_bgr = cv2.cvtColor(image_array, cv2.COLOR_RGB2BGR)
     
-    return image_array
+    return image_bgr
 
 
 def encode_image_to_base64(image: np.ndarray) -> str:
@@ -315,14 +347,38 @@ def recognize_faces():
         # Encode result image
         result_image_base64 = encode_image_to_base64(result_image)
         
-        return jsonify({
+        # Before returning the response, convert NumPy types to Python types
+        def convert_numpy_types(obj):
+            """Convert NumPy data types to native Python types for JSON serialization"""
+            if isinstance(obj, np.integer):
+                return int(obj)
+            elif isinstance(obj, np.floating):
+                return float(obj)
+            elif isinstance(obj, np.ndarray):
+                return obj.tolist()
+            elif isinstance(obj, dict):
+                return {key: convert_numpy_types(value) for key, value in obj.items()}
+            elif isinstance(obj, list):
+                return [convert_numpy_types(item) for item in obj]
+            else:
+                return obj
+        
+        # Apply conversion to your response data
+        response_data = {
             'faces': recognition_results,
             'result_image': result_image_base64,
             'num_faces': len(recognition_results)
-        })
+        }
+        
+        # Convert NumPy types before jsonifying
+        converted_response = convert_numpy_types(response_data)
+        
+        return jsonify(converted_response)
         
     except Exception as e:
-        return jsonify({'error': str(e), 'traceback': traceback.format_exc()}), 500
+        app.logger.error(f"Error in recognize_faces: {str(e)}")
+        app.logger.error(f"Traceback: {traceback.format_exc()}")
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/analyze_image', methods=['POST'])
@@ -538,7 +594,7 @@ if __name__ == '__main__':
     print("  POST /api/process_image   - Image processing operations")
     print()
     
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 5001))
     host = '0.0.0.0'
     print(f"Starting server on http://{'localhost' if host == '0.0.0.0' else host}:{port}")
     
