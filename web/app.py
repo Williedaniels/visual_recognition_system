@@ -536,7 +536,9 @@ if __name__ == '__main__':
     print("  POST /api/compare_images  - Image similarity comparison")
     print("  POST /api/process_image   - Image processing operations")
     print()
-    print("Starting server on http://localhost:5000")
     
-    app.run(host='0.0.0.0', port=5000, debug=True)
-
+    port = int(os.environ.get("PORT", 5000))
+    host = '0.0.0.0'
+    print(f"Starting server on http://{'localhost' if host == '0.0.0.0' else host}:{port}")
+    
+    app.run(host=host, port=port, debug=True)

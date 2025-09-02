@@ -53,13 +53,22 @@ visual_recognition_system/
    cd visual-recognition-system
    ```
 
-2. **Install Python dependencies:**
+2. **Create and activate a Python virtual environment:**
+   This keeps your project dependencies isolated.
+
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
+
+3. **Install Python dependencies:**
+   With the virtual environment active, install the required packages.
 
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Install frontend dependencies:**
+4. **Install frontend dependencies:**
 
    ```bash
    cd web/visual-recognition-frontend
@@ -69,10 +78,10 @@ visual_recognition_system/
 ### Running the Application
 
 1. **Start the Flask backend:**
-   Open a terminal and run:
+   In a terminal where your virtual environment is active, run:
 
    ```bash
-   cd visual-recognition-system
+   # Make sure you are in the project root and your venv is active
    python3 web/app.py
    ```
 
