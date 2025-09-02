@@ -20,7 +20,7 @@ import {
 } from 'lucide-react'
 import './App.css'
 
-const API_BASE_URL = 'http://localhost:5000/api'
+const API_BASE_URL = '/api'
 
 function App() {
   const [selectedImage, setSelectedImage] = useState(null)
@@ -650,4 +650,3 @@ function App() {
 }
 
 export default App
-
