@@ -90,7 +90,3 @@ visual_recognition_system/
 
 3. **Access the application:**
    Open your browser and navigate to `http://localhost:5173` to use the Visual Recognition System.
-
-## Acknowledgments
-
-This project was inspired by the build-your-own-x repository and various computer vision tutorials. It aims to provide a practical, hands-on implementation of a comprehensive visual recognition system from scratch.
