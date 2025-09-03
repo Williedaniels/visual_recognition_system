@@ -98,4 +98,4 @@ visual_recognition_system/
    The frontend will be running at `http://localhost:5173`.
 
 3. **Access the application:**
-   Open your browser and navigate to `http://localhost:5173` to use the Visual Recognition System.
+   Open your browser and navigate to `http://localhost:5173` to use the Visual Recognition System. 
